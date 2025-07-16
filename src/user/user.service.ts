@@ -139,7 +139,6 @@ export class UserService {
   }
 
   async me(id: string) {
-    console.log(id);
     const user = await this.prisma.user.findFirst({
       where: { id },
       include: { announcements: true },
