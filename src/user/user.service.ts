@@ -28,7 +28,14 @@ export class UserService {
   }
 
   async findAll(query: UserQueryDto) {
-    const { page = '1', limit = '10', search, role } = query;
+    const {
+      page = '1',
+      limit = '10',
+      search,
+      role,
+      createdAtFrom,
+      createdAtTo,
+    } = query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
@@ -44,6 +51,16 @@ export class UserService {
 
     if (role) {
       where.role = role;
+    }
+
+    if (createdAtFrom || createdAtTo) {
+      where.createdAt = {};
+      if (createdAtFrom) {
+        where.createdAt.gte = new Date(createdAtFrom);
+      }
+      if (createdAtTo) {
+        where.createdAt.lte = new Date(createdAtTo);
+      }
     }
 
     const [data, total] = await this.prisma.$transaction([
@@ -86,16 +103,15 @@ export class UserService {
     // if (!isVerified) {
     //   throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
     // }
-    let hashPassword = bcrypt.hashSync(dto.password, 10);
 
     const registerUser = await this.prisma.user.create({
-      data: { ...dto, password: hashPassword },
+      data: { ...dto },
     });
     return { data: registerUser };
   }
 
   async login(dto: LoginUserDto) {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findUnique({
       where: { phone: dto.phone },
     });
     if (!user) {
@@ -120,5 +136,18 @@ export class UserService {
     }
     const deleteUser = await this.prisma.user.delete({ where: { id } });
     return { data: deleteUser };
+  }
+
+  async me(id: string) {
+    console.log(id);
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+      include: { announcements: true },
+    });
+    console.log(user);
+    if (!user) {
+      throw new NotFoundException('user topilmadi');
+    }
+    return { data: user };
   }
 }

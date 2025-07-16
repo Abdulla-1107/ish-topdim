@@ -5,7 +5,4 @@ export class LoginUserDto {
   @ApiProperty({ example: '+998931781164' })
   @IsNotEmpty()
   phone: string;
-  @ApiProperty({ example: 'password' })
-  @IsNotEmpty()
-  password: string;
 }
