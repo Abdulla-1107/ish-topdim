@@ -6,29 +6,27 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwt: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request: Request = context.switchToHttp().getRequest();
 
-    const authHeader = request.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token topilmadi');
+    const token = request.headers?.authorization?.split(' ')?.[1];
+    console.log(token, 'nimaga');
+
+    if (!token) {
+      throw new UnauthorizedException('Token is not provided');
     }
 
-    const token = authHeader.split(' ')[1];
-
     try {
-      const decoded = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET || 'secret',
-      });
-      request['user'] = decoded;
+      let data = this.jwt.verify(token);
+      request['user-id'] = data.id;
+      request['user-role'] = data.role;
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Xato token yoki muddati tugagan');
+      throw new UnauthorizedException('Token is invalid');
     }
   }
 }

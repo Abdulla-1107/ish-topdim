@@ -9,8 +9,6 @@ import { OtpService } from 'src/otp/otp.service';
 import { CreateUserDto } from './dto/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from './dto/login-user.dto';
-import * as bcrypt from 'bcrypt';
-import { contains } from 'class-validator';
 import { UserQueryDto } from './dto/query-user.dto';
 
 @Injectable()
@@ -105,7 +103,7 @@ export class UserService {
     // }
 
     const registerUser = await this.prisma.user.create({
-      data: { ...dto },
+      data: dto,
     });
     return { data: registerUser };
   }
@@ -117,7 +115,10 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('user topilmadi');
     }
-    const token = this.jwt.sign({ id: user.id, phone: user.phone });
+    const token = this.jwt.sign({
+      id: user.id,
+      phone: user.phone,
+    });
     return { token };
   }
 
@@ -143,7 +144,6 @@ export class UserService {
       where: { id },
       include: { announcements: true },
     });
-    console.log(user);
     if (!user) {
       throw new NotFoundException('user topilmadi');
     }

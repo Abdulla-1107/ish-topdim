@@ -23,7 +23,14 @@ import { AuthGuard } from 'src/auth/auth.guard';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: "User barcha ma'lumotlarni olish" })
+  @Get('/me')
+  me(@Req() req: Request) {
+    const userId = req['user-id'];
 
+    return this.userService.me(userId);
+  }
   @Get()
   findAll(@Query() query: UserQueryDto) {
     return this.userService.findAll(query);
@@ -70,15 +77,5 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @ApiOperation({ summary: "User barcha ma'lumotlarni olish" })
-  @Get('/me')
-  me(@Req() req: Request) {
-    const userId = req['user'].id;
-    console.log(userId);
-    
-    return this.userService.me(userId);
   }
 }

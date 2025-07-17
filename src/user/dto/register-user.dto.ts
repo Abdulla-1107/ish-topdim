@@ -40,7 +40,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   image?: string;
-
-  @ApiProperty({ example: 'user' })
+  @IsOptional()
+  @ApiProperty({ example: 'USER' })
   role: string;
 }

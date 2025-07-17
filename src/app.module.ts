@@ -6,6 +6,8 @@ import { OtpModule } from './otp/otp.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AnnouncementModule } from './announcement/announcement.module';
+import { RegionModule } from './region/region.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     UserModule,
     OtpModule,
     PrismaModule,
+    AnnouncementModule,
+    RegionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -18,6 +18,7 @@ async function bootstrap() {
     .setTitle('API')
     .setDescription('ish')
     .setVersion('1.0')
+    .addSecurityRequirements('bearer', ['bearer'])
     .addBearerAuth()
     .build();
 
