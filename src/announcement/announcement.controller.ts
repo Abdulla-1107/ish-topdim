@@ -8,12 +8,14 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
+import { AnnouncementQueryDto } from './dto/announcement-query.dto';
 
 @Controller('announcement')
 export class AnnouncementController {
@@ -32,8 +34,8 @@ export class AnnouncementController {
   }
 
   @Get()
-  findAll() {
-    return this.announcementService.findAll();
+  findAll(@Query() query: AnnouncementQueryDto) {
+    return this.announcementService.findAll(query);
   }
 
   @Get(':id')

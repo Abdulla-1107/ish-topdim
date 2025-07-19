@@ -8,9 +8,16 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { RegionModule } from './region/region.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { UploadController } from './upload/upload.controller';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'images'),
+      serveRoot: '/file',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -30,7 +37,7 @@ import { RegionModule } from './region/region.module';
     AnnouncementModule,
     RegionModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UploadController],
   providers: [AppService],
 })
 export class AppModule {}

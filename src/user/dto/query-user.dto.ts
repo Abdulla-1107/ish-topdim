@@ -1,5 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumberString, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumberString,
+  IsDateString,
+} from 'class-validator';
 
 export class UserQueryDto {
   @ApiPropertyOptional({ example: '1', description: 'Page raqami' })
@@ -23,7 +28,7 @@ export class UserQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
-    example: 'admin',
+    example: 'user',
     description: 'Role bo‘yicha filter',
   })
   @IsOptional()
@@ -31,7 +36,6 @@ export class UserQueryDto {
   role?: string;
 
   @ApiPropertyOptional({
-    example: '2025-01-01',
     description: 'Qaysi sanadan boshlab yaratilgan',
   })
   @IsOptional()
@@ -39,7 +43,6 @@ export class UserQueryDto {
   createdAtFrom?: string;
 
   @ApiPropertyOptional({
-    example: '2025-12-31',
     description: 'Qaysi sanagacha yaratilgan',
   })
   @IsOptional()

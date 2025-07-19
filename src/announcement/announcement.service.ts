@@ -6,6 +6,7 @@ import {
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AnnouncementQueryDto } from './dto/announcement-query.dto';
 
 @Injectable()
 export class AnnouncementService {
@@ -26,9 +27,62 @@ export class AnnouncementService {
     return creadet;
   }
 
-  async findAll() {
-    let data = await this.prisma.announcement.findMany();
-    return data;
+  async findAll(query: AnnouncementQueryDto) {
+    try {
+      const {
+        type,
+        cityId,
+        district,
+        search,
+        userId,
+        sortBy = 'createdAt',
+        order = 'desc',
+        page = '1',
+        limit = '10',
+      } = query;
+
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      const where: any = {
+        ...(type && { type }),
+        ...(cityId && { cityId }),
+        ...(district && {
+          district: { contains: district, mode: 'insensitive' },
+        }),
+        ...(userId && { userId }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+      };
+
+      const data = await this.prisma.announcement.findMany({
+        where,
+        orderBy: {
+          [sortBy]: order,
+        },
+        skip,
+        take: parseInt(limit),
+        include: {
+          City: true,
+          user: { select: { phone: true, fullName: true } },
+        },
+      });
+
+      return {
+        data,
+        meta: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          count: data.length,
+        },
+      };
+    } catch (error) {
+      console.error('FindAll Announcement Error:', error);
+      throw new Error('E’lonlarni yuklashda xatolik yuz berdi');
+    }
   }
 
   async findOne(id: string) {

@@ -48,7 +48,10 @@ export class UserService {
     }
 
     if (role) {
-      where.role = role;
+      where.role = {
+        contains: role,
+        mode: 'insensitive',
+      };
     }
 
     if (createdAtFrom || createdAtTo) {
@@ -102,6 +105,13 @@ export class UserService {
     //   throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
     // }
 
+    const isCheckPhone = await this.prisma.user.findFirst({
+      where: { phone: dto.phone },
+    });
+
+    if (isCheckPhone) {
+      throw new BadRequestException("Ushbu telefon raqam ro'yxatdan o'tilgan");
+    }
     const registerUser = await this.prisma.user.create({
       data: dto,
     });
@@ -109,7 +119,7 @@ export class UserService {
   }
 
   async login(dto: LoginUserDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { phone: dto.phone },
     });
     if (!user) {
