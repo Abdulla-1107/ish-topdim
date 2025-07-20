@@ -100,10 +100,10 @@ export class UserService {
   }
 
   async register(dto: CreateUserDto) {
-    // const isVerified = await this.otpService.isPhoneVerified(dto.phone);
-    // if (!isVerified) {
-    //   throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
-    // }
+    const isVerified = await this.otpService.isPhoneVerified(dto.phone);
+    if (!isVerified) {
+      throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
+    }
 
     const isCheckPhone = await this.prisma.user.findFirst({
       where: { phone: dto.phone },
