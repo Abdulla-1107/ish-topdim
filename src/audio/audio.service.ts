@@ -19,7 +19,7 @@ export class AudioService {
       form,
       {
         headers: {
-          Authorization: `Bearer ${this.config.get('OPENAI_API_KEY')}`,
+          Authorization: `Bearer ${this.config.get('API_KEY')}`,
           ...form.getHeaders(),
         },
       },

@@ -1,46 +1,35 @@
-// src/ai/ai.service.ts
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import * as fs from 'fs';
+import * as FormData from 'form-data';
 
 @Injectable()
 export class AiService {
-  constructor(private config: ConfigService) {}
+  constructor(private readonly config: ConfigService) {}
 
-  async processResumeDialog(userText: string, context: any[] = []) {
-    const messages = [
-      {
-        role: 'system',
-        content: `Siz 'Ishtopdim' platformasining AI yordamchisisiz. Foydalanuvchi ish qidirmoqda. Siz unga quyidagi savollarni navbatma-navbat bering, va oxirida JSON ko’rinishida quyidagicha formatlab bering:
-{
-  "name": "...",
-  "age": 25,
-  "location": "...",
-  "skills": "...",
-  "field": "...",
-  "phone": "..."
-}`,
-      },
-      ...context,
-      {
-        role: 'user',
-        content: userText,
-      },
-    ];
+  // ✅ BU FUNKSIYA: audio file'dan transcript olish
+  async transcribeAudio(filePath: string): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(filePath));
+    formData.append('model', 'whisper-1');
 
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4',
-        messages,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${this.config.get('OPENAI_API_KEY')}`,
+    try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/audio/transcriptions',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${this.config.get('API_KEY')}`,
+            ...formData.getHeaders(),
+          },
         },
-      },
-    );
+      );
 
-    return response.data.choices[0].message.content;
+      return response.data.text;
+    } catch (error) {
+      console.error('Transcribe xatolik:', error?.response?.data || error.message);
+      throw new Error('Transkriptsiya xatoligi');
+    }
   }
 }
