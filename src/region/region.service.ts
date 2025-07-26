@@ -19,7 +19,7 @@ export class cityService {
     });
 
     if (existingCity) {
-      throw new BadRequestException('Shahar allaqachon yaratilgan');
+      throw new BadRequestException('Region allaqachon yaratilgan');
     }
 
     return this.prisma.city.create({
@@ -34,7 +34,7 @@ export class cityService {
   async findOne(id: string) {
     const city = await this.prisma.city.findFirst({ where: { id } });
     if (!city) {
-      throw new NotFoundException(`shahar topilmadi`);
+      throw new NotFoundException(`Region topilmadi`);
     }
     return city;
   }
@@ -42,7 +42,7 @@ export class cityService {
   async update(id: string, updatecityDto: UpdateRegionDto) {
     const exists = await this.prisma.city.findFirst({ where: { id } });
     if (!exists) {
-      throw new NotFoundException(`shahar topilmadi`);
+      throw new NotFoundException(`Region topilmadi`);
     }
     return this.prisma.city.update({
       where: { id },
@@ -53,7 +53,7 @@ export class cityService {
   async remove(id: string) {
     const exists = await this.prisma.city.findFirst({ where: { id } });
     if (!exists) {
-      throw new NotFoundException(`shahar topilmadi`);
+      throw new NotFoundException(`Region topilmadi`);
     }
     return this.prisma.city.delete({ where: { id } });
   }

@@ -11,6 +11,9 @@ import { RegionModule } from './region/region.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UploadController } from './upload/upload.controller';
+import { ResumeModule } from './resume/resume.module';
+import { AiModule } from './ai/ai.module';
+import { AudioModule } from './audio/audio.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { UploadController } from './upload/upload.controller';
     PrismaModule,
     AnnouncementModule,
     RegionModule,
+    ResumeModule,
+    AiModule,
+    AudioModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService],

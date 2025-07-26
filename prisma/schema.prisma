@@ -19,6 +19,7 @@ model User {
   announcements         Announcement[] // yaratgan e’lonlari
   acceptedAnnouncements Announcement[] @relation("AcceptedUser") // qabul qilgan e’lonlari
   logs                  Log[]
+  resumes               Resume[] // foydalanuvchi yuborgan ishchi profillari
 }
 
 model Announcement {
@@ -38,9 +39,19 @@ model Announcement {
   createdAt   DateTime         @default(now())
 }
 
-enum AnnouncementType {
-  service
-  job
+model Resume {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  name     String
+  age      Int?
+  location String
+  skills   String
+  field    String
+  phone    String
+
+  createdAt DateTime @default(now())
 }
 
 model City {
@@ -49,17 +60,22 @@ model City {
   announcements Announcement[]
 }
 
-enum LogAction {
-  create_announcement
-  delete_announcement
-  login_user
-  login_admin
-}
-
 model Log {
   id        String    @id @default(uuid())
   userId    String?
   user      User?     @relation(fields: [userId], references: [id])
   action    LogAction
   createdAt DateTime  @default(now())
+}
+
+enum AnnouncementType {
+  service
+  job
+}
+
+enum LogAction {
+  create_announcement
+  delete_announcement
+  login_user
+  login_admin
 }
