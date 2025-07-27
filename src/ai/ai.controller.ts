@@ -3,8 +3,8 @@
 import {
   Controller,
   Post,
-  UseInterceptors,
   UploadedFile,
+  UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -12,7 +12,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
 import { AiService } from './ai.service';
-import { ApiConsumes, ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiBody, ApiTags, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('AI')
 @Controller('ai')
@@ -37,12 +37,14 @@ export class AiController {
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
+        file: { type: 'string', format: 'binary' },
       },
+      required: ['file'],
     },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'AI tahlili natijasi',
   })
   async voice(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -52,10 +54,16 @@ export class AiController {
     }
 
     const transcript = await this.aiService.transcribeAudio(file.path);
+    const aiResult = await this.aiService.detectIntent(transcript);
+    const matchedUsers = await this.aiService.matchUsers(aiResult);
+
+    await fs.promises.unlink(file.path).catch(console.error);
 
     return {
       status: 'success',
       transcript,
+      aiResult,
+      matchedUsers,
     };
   }
 }

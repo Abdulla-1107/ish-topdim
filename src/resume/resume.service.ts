@@ -16,8 +16,8 @@ export class ResumeService {
     });
   }
 
-  findAll() {
-    return `This action returns all resume`;
+  async findAll() {
+    return await this.prisma.resume.findMany();
   }
 
   findOne(id: number) {
