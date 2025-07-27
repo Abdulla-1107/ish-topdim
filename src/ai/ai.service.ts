@@ -12,11 +12,11 @@ export class AiService {
     private readonly prisma: PrismaService,
   ) {}
 
-  // 🎙 AUDIO -> TEXT (Whisper)
+  // 🎙 AUDIO -> TEXT
   async transcribeAudio(filePath: string): Promise<string> {
     const form = new FormData();
     form.append('file', fs.createReadStream(filePath));
-    form.append('model', 'gpt-4o-transcribe');
+    form.append('model', 'whisper-1');
 
     const res = await axios.post(
       'https://api.openai.com/v1/audio/transcriptions',
@@ -32,7 +32,7 @@ export class AiService {
     return res.data.text;
   }
 
-  // 🧠 TEXT -> AI INTENT (GPT)
+  // 🧠 TEXT -> INTENT
   async detectIntent(userText: string): Promise<any> {
     const messages = [
       {
@@ -71,7 +71,6 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`,
     try {
       const parsed = JSON.parse(result);
 
-      // ✅ Normalize
       if (typeof parsed.field === 'string') {
         parsed.field = parsed.field
           .split(',')
@@ -93,7 +92,7 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`,
     }
   }
 
-  // 🔍 INTENT -> QUERY
+  // 🔍 INTENT -> DB QUERY
   async matchUsers(ai: any) {
     if (ai?.error) return { message: ai.message };
     if (!Array.isArray(ai.field)) {
@@ -124,7 +123,7 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`,
           ...filterByTitle,
         },
         include: {
-          user: true,
+          user: { select: { fullName: true, phone: true } },
           City: true,
         },
       });
@@ -147,7 +146,7 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`,
           ...filterByTitle,
         },
         include: {
-          user: true,
+          user: { select: { fullName: true, phone: true } },
           City: true,
         },
       });
@@ -163,6 +162,103 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`,
       return { found: true, data: announcements };
     }
 
-    return { message: 'Menga faqat ishchi yoki ish izlash boyicha sorov yuborishingiz kerak' };
+    return {
+      message:
+        'Menga faqat ishchi yoki ish izlash boyicha sorov yuborishingiz kerak',
+    };
+  }
+
+  private async summarizeResult(intent: any, results: any): Promise<string> {
+    const count = results?.data?.length || 0;
+
+    const inputSummary = [
+      intent.action === 'hire_worker'
+        ? 'Siz ishchi qidiryapsiz'
+        : 'Siz ish qidiryapsiz',
+      intent.field?.length ? `yo‘nalish: ${intent.field.join(', ')}` : '',
+      intent.location ? `joylashuv: ${intent.location}` : '',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    if (!results.found) {
+      return `${inputSummary}. Afsuski, mos e’lonlar topilmadi.`;
+    }
+
+    return `${inputSummary}. ${count} ta mos e’lon topildi. Birinchi: ${results.data[0].title} — ${results.data[0].user.fullName}, tel: ${results.data[0].user.phone}`;
+  }
+
+  async handleFreeTextMessage(text: string) {
+    try {
+      if (!text || text.trim().length === 0) {
+        return {
+          status: 'error',
+          message: 'Matn bo‘sh bo‘lishi mumkin emas.',
+        };
+      }
+
+      const intent = await this.detectIntent(text);
+
+      if (intent?.error || !intent?.action) {
+        const fallbackMessages = [
+          {
+            role: 'system',
+            content:
+              'Sen foydalanuvchi bilan hushmuomala, foydali, kulgili va yordam beradigan chatbot bo‘lasan.',
+          },
+          {
+            role: 'user',
+            content: text,
+          },
+        ];
+
+        const fallbackRes = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4',
+            messages: fallbackMessages,
+            temperature: 0.7,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${this.config.get('API_KEY')}`,
+            },
+          },
+        );
+
+        const fallbackReply = fallbackRes.data.choices[0].message.content;
+
+        return {
+          status: 'success',
+          type: 'chat',
+          input: text,
+          reply: fallbackReply,
+          aiType: 'fallback',
+        };
+      }
+
+      // 2. E’lonlarni topamiz
+      const results = await this.matchUsers(intent);
+
+      // 3. AI orqali chiroyli javob yasab qaytaramiz
+      const summary = await this.summarizeResult(intent, results);
+
+      return {
+        status: 'success',
+        type: 'search',
+        input: text,
+        intent,
+        matched: results,
+        reply: summary,
+      };
+    } catch (error) {
+      console.error('Chat AI xatolikka uchradi:', error);
+
+      return {
+        status: 'error',
+        message: 'Ichki xatolik yuz berdi.',
+        details: error?.message || error,
+      };
+    }
   }
 }

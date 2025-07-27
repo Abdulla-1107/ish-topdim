@@ -13,51 +13,61 @@ model User {
   lastName  String?
   phone     String   @unique
   image     String?
-  role      String   // 'worker' yoki 'employer'
+  role      String
   createdAt DateTime @default(now())
 
   announcements         Announcement[] // yaratgan e’lonlari
   acceptedAnnouncements Announcement[] @relation("AcceptedUser") // qabul qilgan e’lonlari
   logs                  Log[]
-  resumes               Resume[] // ishchilar profillari (CV)
+  resumes               Resume[]
+  ChatLog               ChatLog[]
 }
 
 model Resume {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   name      String
   age       Int?
-  location  String   // manzil (shahar yoki tuman)
-  skills    String   // texnologiyalar yoki ko‘nikmalar
-  field     String   // kasb: santexnik, haydovchi va h.k.
+  location  String // manzil (shahar yoki tuman)
+  skills    String // texnologiyalar yoki ko‘nikmalar
+  field     String // kasb: santexnik, haydovchi va h.k.
   phone     String
   createdAt DateTime @default(now())
 }
 
 model Announcement {
-  id           String  @id @default(uuid())
-  userId       String
-  user         User    @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   acceptedById String?
   acceptedBy   User?   @relation("AcceptedUser", fields: [acceptedById], references: [id])
 
-  type         AnnouncementType // 'job' yoki 'service'
-  title        String           // masalan: "Santexnik kerak"
-  description  String
-  price        String?
-  cityId       String
-  City         City             @relation(fields: [cityId], references: [id])
-  district     String?
-  createdAt    DateTime         @default(now())
+  type        AnnouncementType // 'job' yoki 'service'
+  title       String // masalan: "Santexnik kerak"
+  description String
+  price       String?
+  cityId      String
+  City        City             @relation(fields: [cityId], references: [id])
+  district    String?
+  createdAt   DateTime         @default(now())
 }
 
 model City {
   id            String         @id @default(uuid())
   name          String         @unique
   announcements Announcement[]
+}
+
+model ChatLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  userText   String
+  aiResponse String
+  createdAt  DateTime @default(now())
 }
 
 model Log {

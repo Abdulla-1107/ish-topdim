@@ -6,6 +6,7 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -13,6 +14,7 @@ import { extname } from 'path';
 import * as fs from 'fs';
 import { AiService } from './ai.service';
 import { ApiConsumes, ApiBody, ApiTags, ApiResponse } from '@nestjs/swagger';
+import { AiTextDto } from './dto/create-ai.dto';
 
 @ApiTags('AI')
 @Controller('ai')
@@ -65,5 +67,11 @@ export class AiController {
       aiResult,
       matchedUsers,
     };
+  }
+
+  @Post('chat')
+  @ApiBody({ type: AiTextDto })
+  async chat(@Body() dto: AiTextDto) {
+    return this.aiService.handleFreeTextMessage(dto.text);
   }
 }
