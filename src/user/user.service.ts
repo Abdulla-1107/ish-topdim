@@ -10,6 +10,7 @@ import { CreateUserDto } from './dto/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UserQueryDto } from './dto/query-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -112,8 +113,9 @@ export class UserService {
     if (isCheckPhone) {
       throw new BadRequestException("Ushbu telefon raqam ro'yxatdan o'tilgan");
     }
+    const hashpassword = bcrypt.hashSync(dto.password, 10);
     const registerUser = await this.prisma.user.create({
-      data: dto,
+      data: { ...dto, password: hashpassword },
     });
     return { data: registerUser };
   }
@@ -122,13 +124,26 @@ export class UserService {
     const user = await this.prisma.user.findFirst({
       where: { phone: dto.phone },
     });
+
     if (!user) {
       throw new NotFoundException('user topilmadi');
     }
+
+    if (!user.password) {
+      throw new NotFoundException('userda password mavjud emas');
+    }
+
+    const match = bcrypt.compareSync(dto.password, user.password);
+
+    if (!match) {
+      throw new NotFoundException('xato password');
+    }
+
     const token = this.jwt.sign({
       id: user.id,
       phone: user.phone,
     });
+
     return { token };
   }
 

@@ -18,13 +18,12 @@ export class CreateUserDto {
   fullName: string;
 
   @ApiProperty({
-    example: 'Valiyev',
-    description: 'Familiya (ixtiyoriy)',
+    example: '12345678',
     required: false,
   })
   @IsOptional()
   @IsString()
-  lastName?: string;
+  password: string;
 
   @ApiProperty({
     example: '+998901234567',
