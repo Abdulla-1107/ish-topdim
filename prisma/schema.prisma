@@ -16,11 +16,11 @@ model User {
   role      String
   createdAt DateTime @default(now())
 
-  announcements         Announcement[] // yaratgan e’lonlari
-  acceptedAnnouncements Announcement[] @relation("AcceptedUser") // qabul qilgan e’lonlari
-  logs                  Log[]
-  resumes               Resume[]
-  ChatLog               ChatLog[]
+  announcements Announcement[] // yaratgan e’lonlari
+  logs          Log[]
+  resumes       Resume[]
+  ChatLog       ChatLog[]
+  AIContext     AIContext?
 }
 
 model Resume {
@@ -42,18 +42,36 @@ model Announcement {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  acceptedById String?
-  acceptedBy   User?   @relation("AcceptedUser", fields: [acceptedById], references: [id])
-
   type        AnnouncementType // 'job' yoki 'service'
   title       String // masalan: "Santexnik kerak"
   description String
-  price       String?
-  cityId      String
-  City        City             @relation(fields: [cityId], references: [id])
+  price       Int?
+  cityId      String?
+  City        City?            @relation(fields: [cityId], references: [id])
   district    String?
   createdAt   DateTime         @default(now())
 }
+
+// ai_context schema (Prisma uchun)
+model AIContext {
+  userId      String   @id
+  title       String?
+  description String?
+  location    String?
+  district    String?
+  price       Int?
+  type        String?
+
+  // 🔽 Qo‘shimcha maydonlar
+  action      String?
+  field       String[]
+  experience  String?
+  other       String?
+
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
 
 model City {
   id            String         @id @default(uuid())

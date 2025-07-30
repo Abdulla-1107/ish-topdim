@@ -7,6 +7,8 @@ import {
   UseInterceptors,
   BadRequestException,
   Body,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -15,12 +17,15 @@ import * as fs from 'fs';
 import { AiService } from './ai.service';
 import { ApiConsumes, ApiBody, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { AiTextDto } from './dto/create-ai.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { AiCreateTextDto } from './dto/create-text';
 
 @ApiTags('AI')
 @Controller('ai')
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
+  @UseGuards(AuthGuard)
   @Post('voice')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -69,9 +74,75 @@ export class AiController {
     };
   }
 
-  @Post('chat')
+  @UseGuards(AuthGuard)
+  @Post('search-announcement')
   @ApiBody({ type: AiTextDto })
-  async chat(@Body() dto: AiTextDto) {
-    return this.aiService.handleFreeTextMessage(dto.text);
+  async chat(@Req() req: Request, @Body() dto: AiTextDto) {
+    const userId = req['user-id'];
+    return this.aiService.handleFreeTextMessage(dto.text, userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('create-announcement')
+  @ApiBody({ type: AiCreateTextDto })
+  async createAnnouncement(@Req() req: Request, @Body() dto: AiCreateTextDto) {
+    const userId = req['user-id'];
+    return this.aiService.saveAnnouncementFromText(dto.text, userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('voice-announcement')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
+          cb(null, uniqueName);
+        },
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'E’lon yaratish uchun audio yuboring (.mp3, .wav, .m4a)',
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'E’lon yaratish natijasi',
+  })
+  async createFromVoice(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    if (!file) {
+      throw new BadRequestException(
+        'Fayl yuborilmadi! Iltimos, audio fayl yuboring.',
+      );
+    }
+
+    const userId = req['user-id'];
+    const transcript = await this.aiService.transcribeAudio(file.path);
+    const result = await this.aiService.saveAnnouncementFromText(
+      transcript,
+      userId,
+    );
+
+    await fs.promises.unlink(file.path).catch(() => null);
+
+    const { status, ...rest } = result;
+
+    return {
+      status,
+      transcript,
+      ...rest,
+    };
   }
 }

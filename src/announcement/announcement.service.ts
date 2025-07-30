@@ -3,7 +3,6 @@ import {
   AnnouncementType,
   CreateAnnouncementDto,
 } from './dto/create-announcement.dto';
-import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AnnouncementQueryDto } from './dto/announcement-query.dto';
@@ -18,13 +17,7 @@ export class AnnouncementService {
     if (!exiting) {
       throw new NotFoundException('city topilmadi');
     }
-    let creadet = await this.prisma.announcement.create({
-      data: {
-        ...data2,
-        userId,
-      },
-    });
-    return creadet;
+    return { data: 'salom' };
   }
 
   async findAll(query: AnnouncementQueryDto) {
@@ -93,7 +86,7 @@ export class AnnouncementService {
     return data;
   }
 
-  async update(id: string, data: UpdateAnnouncementDto) {
+  async update(id: string, data: any) {
     const existing = await this.prisma.announcement.findFirst({
       where: { id },
     });

@@ -29,8 +29,7 @@ export class CreateAnnouncementDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  price?: string;
+  price?: Number;
 
   @ApiProperty({
     example: 'c7691714-b9d7-4ed6-99c6-a241f741f3d6',

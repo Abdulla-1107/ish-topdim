@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
-import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
 import { AnnouncementQueryDto } from './dto/announcement-query.dto';
@@ -46,7 +45,7 @@ export class AnnouncementController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateAnnouncementDto: UpdateAnnouncementDto,
+    @Body() updateAnnouncementDto: any,
   ) {
     return this.announcementService.update(id, updateAnnouncementDto);
   }
