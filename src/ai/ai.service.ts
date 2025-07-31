@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as ffmpeg from 'fluent-ffmpeg';
-import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 
 @Injectable()
 export class AiService {
@@ -15,7 +14,9 @@ export class AiService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    ffmpeg.setFfprobePath('C:/ffmpeg-7.1.1-essentials_build/bin/ffprobe.exe');
+    // Linux yo‘llari — ffmpeg tizimga o‘rnatilgan
+    ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
+    ffmpeg.setFfprobePath('/usr/bin/ffprobe');
   }
 
   getAudioDurationInSeconds(filePath: string): Promise<number> {
@@ -31,7 +32,7 @@ export class AiService {
   async transcribeAudio(filePath: string): Promise<string> {
     const duration = await this.getAudioDurationInSeconds(filePath);
 
-    if (duration > 60) {
+    if (duration >= 60) {
       throw new BadRequestException(
         'Audio fayl 60 soniyadan oshmasligi kerak.',
       );
