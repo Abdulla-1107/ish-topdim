@@ -18,6 +18,9 @@ import { CreateUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UserQueryDto } from './dto/query-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { Role } from 'src/decorators/role.decorators';
+import { UserRole } from 'src/enums/user-role.enum';
+import { AdminGuard } from 'src/auth/role.guard';
 
 @ApiBearerAuth()
 @Controller('user')
@@ -31,6 +34,7 @@ export class UserController {
 
     return this.userService.me(userId);
   }
+  @UseGuards(AuthGuard, AdminGuard)
   @Get()
   findAll(@Query() query: UserQueryDto) {
     return this.userService.findAll(query);
@@ -74,6 +78,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);

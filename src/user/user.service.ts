@@ -101,10 +101,10 @@ export class UserService {
   }
 
   async register(dto: CreateUserDto) {
-    const isVerified = await this.otpService.isPhoneVerified(dto.phone);
-    if (!isVerified) {
-      throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
-    }
+    // const isVerified = await this.otpService.isPhoneVerified(dto.phone);
+    // if (!isVerified) {
+    //   throw new BadRequestException('Telefon raqami OTP bilan tasdiqlanmagan');
+    // }
 
     const isCheckPhone = await this.prisma.user.findFirst({
       where: { phone: dto.phone },
@@ -142,13 +142,17 @@ export class UserService {
     const token = this.jwt.sign({
       id: user.id,
       phone: user.phone,
+      role: user.role,
     });
 
     return { token };
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findFirst({ where: { id } });
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+      include: { announcements: { select: { title: true, price: true } } },
+    });
     if (!user) {
       throw new NotFoundException('user topilmadi');
     }

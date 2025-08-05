@@ -15,6 +15,9 @@ import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Request } from 'express';
 import { AnnouncementQueryDto } from './dto/announcement-query.dto';
+import { Role } from 'src/decorators/role.decorators';
+import { UserRole } from 'src/enums/user-role.enum';
+import { AdminGuard } from 'src/auth/role.guard';
 
 @Controller('announcement')
 export class AnnouncementController {
@@ -32,6 +35,7 @@ export class AnnouncementController {
     return this.announcementService.create(createAnnouncementDto, userId);
   }
 
+  @UseGuards(AuthGuard, AdminGuard)
   @Get()
   findAll(@Query() query: AnnouncementQueryDto) {
     return this.announcementService.findAll(query);
@@ -43,13 +47,11 @@ export class AnnouncementController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAnnouncementDto: any,
-  ) {
+  update(@Param('id') id: string, @Body() updateAnnouncementDto: any) {
     return this.announcementService.update(id, updateAnnouncementDto);
   }
 
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.announcementService.remove(id);

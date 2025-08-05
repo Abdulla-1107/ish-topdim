@@ -13,7 +13,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { AiService } from './ai.service';
 import { ApiConsumes, ApiBody, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { AiTextDto } from './dto/create-ai.dto';
@@ -25,19 +25,21 @@ import { AiCreateTextDto } from './dto/create-text';
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  @UseGuards(AuthGuard)
-  @Post('voice')
-  @UseInterceptors(
-    FileInterceptor('file', {
+  private getMulterOptions() {
+    return FileInterceptor('file', {
       storage: diskStorage({
         destination: './uploads',
-        filename: (req, file, cb) => {
+        filename: (_, file, cb) => {
           const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
           cb(null, uniqueName);
         },
       }),
-    }),
-  )
+    });
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('voice')
+  @UseInterceptors(AiController.prototype.getMulterOptions())
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Audio fayl yuboring (.mp3, .wav, .m4a)',
@@ -49,10 +51,7 @@ export class AiController {
       required: ['file'],
     },
   })
-  @ApiResponse({
-    status: 201,
-    description: 'AI tahlili natijasi',
-  })
+  @ApiResponse({ status: 201, description: 'AI tahlili natijasi' })
   async voice(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException(
@@ -64,7 +63,11 @@ export class AiController {
     const aiResult = await this.aiService.detectIntent(transcript);
     const matchedUsers = await this.aiService.matchUsers(aiResult);
 
-    await fs.promises.unlink(file.path).catch(console.error);
+    try {
+      await fs.unlink(file.path);
+    } catch (err) {
+      console.error('Faylni o‘chirishda xato:', err);
+    }
 
     return {
       status: 'success',
@@ -92,17 +95,7 @@ export class AiController {
 
   @UseGuards(AuthGuard)
   @Post('voice-announcement')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
-          cb(null, uniqueName);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(AiController.prototype.getMulterOptions())
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'E’lon yaratish uchun audio yuboring (.mp3, .wav, .m4a)',
@@ -114,10 +107,7 @@ export class AiController {
       required: ['file'],
     },
   })
-  @ApiResponse({
-    status: 201,
-    description: 'E’lon yaratish natijasi',
-  })
+  @ApiResponse({ status: 201, description: 'E’lon yaratish natijasi' })
   async createFromVoice(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
@@ -135,7 +125,9 @@ export class AiController {
       userId,
     );
 
-    await fs.promises.unlink(file.path).catch(() => null);
+    try {
+      await fs.unlink(file.path);
+    } catch {}
 
     const { status, ...rest } = result;
 
