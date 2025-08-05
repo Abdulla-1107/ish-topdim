@@ -79,7 +79,12 @@ export class AnnouncementService {
   }
 
   async findOne(id: string) {
-    let data = await this.prisma.announcement.findFirst({ where: { id } });
+    let data = await this.prisma.announcement.findFirst({
+      where: { id },
+      include: {
+        user: { select: { fullName: true, phone: true, createdAt: true } },
+      },
+    });
     if (!data) {
       throw new NotFoundException('elon topilmadi');
     }

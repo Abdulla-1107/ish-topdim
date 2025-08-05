@@ -151,7 +151,7 @@ export class UserService {
   async findOne(id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id },
-      include: { announcements: { select: { title: true, price: true } } },
+      include: { announcements: { select: { title: true, price: true, createdAt: true } } },
     });
     if (!user) {
       throw new NotFoundException('user topilmadi');
