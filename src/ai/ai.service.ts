@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as ffmpeg from 'fluent-ffmpeg';
-import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import * as os from 'os';
 
 @Injectable()
 export class AiService {
@@ -15,7 +15,13 @@ export class AiService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    ffmpeg.setFfprobePath('C:/ffmpeg-7.1.1-essentials_build/bin/ffprobe.exe');
+    const isWindows = os.platform() === 'win32';
+
+    ffmpeg.setFfprobePath(
+      isWindows
+        ? 'C:/ffmpeg-7.1.1-essentials_build/bin/ffprobe.exe'
+        : '/usr/bin/ffprobe',
+    );
   }
 
   getAudioDurationInSeconds(filePath: string): Promise<number> {
@@ -139,7 +145,6 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`;
     if (!text || text.trim().length === 0) {
       return { status: 'error', message: 'Matn bo‘sh bo‘lishi mumkin emas.' };
     }
-    
 
     const aiResult = await this.detectIntent(text);
     if (aiResult?.error) {
@@ -265,7 +270,6 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`;
 
     extracted = await this.getOrMergeContext(userId, extracted);
     const missing = ['location', 'district'].filter((f) => !extracted[f]);
-    
 
     if (missing.length > 0) {
       await this.saveContext(userId, extracted);
@@ -348,4 +352,3 @@ Faqat JSON qaytaring, boshqa so‘z yozmang.`;
     };
   }
 }
-
